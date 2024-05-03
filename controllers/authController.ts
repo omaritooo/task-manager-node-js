@@ -29,6 +29,10 @@ const sendToken = (user: User, statusCode: number, res: Response) => {
     });
   }
 
+  if (user)
+  {
+  delete user.authentication;
+  }
   res.status(statusCode).json({
     status: ReasonPhrases.OK,
     token: token,
@@ -76,14 +80,17 @@ export const login: RequestHandler = catchAsync(
       '+authentication.password'
     );
 
-    if (
+   if (user?.authentication)
+   {
+     if (
       !user ||
       !(await user.correctPassword(password, user.authentication.password))
     ) {
       return next(new AppError('Incorrect email or password', 401));
     }
+   }
 
-    sendToken(user, StatusCodes.OK, res);
+   user ? sendToken(user, StatusCodes.OK, res) : null;
   }
 );
 
@@ -198,7 +205,11 @@ export const resetPassword = catchAsync(
     if (!user) {
       return next(new AppError(ReasonPhrases.NOT_FOUND, StatusCodes.NOT_FOUND));
     }
+    if (user.authentication)
+    {
     user.authentication.password = req.body.password;
+
+    }
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
 

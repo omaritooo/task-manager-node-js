@@ -6,7 +6,7 @@ interface IUserProjects {
 export interface IUser extends Document {
   userId: number;
   name: string;
-  authentication: {
+  authentication?: {
     password: string;
     passwordConfirm: string | undefined;
     salt?: string;

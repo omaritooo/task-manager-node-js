@@ -37,6 +37,9 @@ const sendToken = (user, statusCode, res) => {
             secure: true,
         });
     }
+    if (user) {
+        delete user.authentication;
+    }
     res.status(statusCode).json({
         status: http_status_codes_1.ReasonPhrases.OK,
         token: token,
@@ -71,11 +74,13 @@ exports.login = (0, catchAsync_1.catchAsync)((req, res, next) => __awaiter(void 
         return next(new appError_1.AppError('Please provide email and password!', 400));
     }
     const user = yield userModel_1.Users.findOne({ email }).select('+authentication.password');
-    if (!user ||
-        !(yield user.correctPassword(password, user.authentication.password))) {
-        return next(new appError_1.AppError('Incorrect email or password', 401));
+    if (user === null || user === void 0 ? void 0 : user.authentication) {
+        if (!user ||
+            !(yield user.correctPassword(password, user.authentication.password))) {
+            return next(new appError_1.AppError('Incorrect email or password', 401));
+        }
     }
-    sendToken(user, http_status_codes_1.StatusCodes.OK, res);
+    user ? sendToken(user, http_status_codes_1.StatusCodes.OK, res) : null;
 }));
 const logout = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { headers } = req;
@@ -154,7 +159,9 @@ exports.resetPassword = (0, catchAsync_1.catchAsync)((req, res, next) => __await
     if (!user) {
         return next(new appError_1.AppError(http_status_codes_1.ReasonPhrases.NOT_FOUND, http_status_codes_1.StatusCodes.NOT_FOUND));
     }
-    user.authentication.password = req.body.password;
+    if (user.authentication) {
+        user.authentication.password = req.body.password;
+    }
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     yield user.save();

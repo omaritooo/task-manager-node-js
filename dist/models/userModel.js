@@ -116,8 +116,10 @@ userSchema.pre('save', function (next) {
         if (!this.isModified('authentication.password')) {
             return next();
         }
-        this.authentication.password = yield bcrypt_1.default.hash(this.authentication.password, 12);
-        this.authentication.passwordConfirm = undefined;
+        if (this.authentication) {
+            this.authentication.password = yield bcrypt_1.default.hash(this.authentication.password, 12);
+            this.authentication.passwordConfirm = undefined;
+        }
         next();
     });
 });
@@ -136,10 +138,38 @@ userSchema.methods.createPasswordResetToken = function () {
     return resetToken;
 };
 userSchema.pre('validate', function (next) {
-    if (this.authentication.password !== this.authentication.passwordConfirm) {
+    if (this.authentication && this.authentication.password !== this.authentication.passwordConfirm) {
         this.invalidate('passwordConfirmation', 'enter the same password');
     }
     next();
+});
+userSchema.post('findOne', function (doc) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (doc) {
+            yield doc.populate({
+                path: 'projects',
+                populate: {
+                    path: 'project',
+                    select: '',
+                },
+            });
+        }
+    });
+});
+userSchema.post('find', function (docs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (docs) {
+            for (const doc in docs) {
+                yield docs[doc].populate({
+                    path: 'projects',
+                    populate: {
+                        path: 'project',
+                        select: '',
+                    },
+                });
+            }
+        }
+    });
 });
 userSchema.post('findOneAndDelete', function (doc) {
     return __awaiter(this, void 0, void 0, function* () {

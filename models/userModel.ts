@@ -90,12 +90,15 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('authentication.password')) {
     return next();
   }
-  this.authentication.password = await bcrypt.hash(
+  if (this.authentication)
+  {
+    this.authentication.password = await bcrypt.hash(
     this.authentication.password,
     12
   );
 
   this.authentication.passwordConfirm = undefined;
+  }
   next();
 });
 
@@ -117,12 +120,37 @@ userSchema.methods.createPasswordResetToken = function (this: IUser) {
 };
 
 userSchema.pre('validate', function (this: IUser, next) {
-  if (this.authentication.password !== this.authentication.passwordConfirm) {
+  if (this.authentication && this.authentication.password !== this.authentication.passwordConfirm) {
     this.invalidate('passwordConfirmation', 'enter the same password');
   }
   next();
 });
 
+userSchema.post('findOne', async function (doc) {
+  if (doc) {
+    await doc.populate({
+      path: 'projects',
+      populate: {
+        path: 'project',
+        select: '',
+      },
+    });
+  }
+});
+
+userSchema.post('find', async function (docs) {
+  if (docs) {
+    for (const doc in docs) {
+      await docs[doc].populate({
+        path: 'projects',
+        populate: {
+          path: 'project',
+          select: '',
+        },
+      });
+    }
+  }
+});
 userSchema.post('findOneAndDelete', async function (doc) {
   const user = doc;
 

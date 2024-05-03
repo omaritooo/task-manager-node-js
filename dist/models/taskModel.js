@@ -101,9 +101,9 @@ taskSchema.post('find', function (docs) {
         if (docs) {
             for (const doc in docs) {
                 yield docs[doc].populate([
-                    { path: 'author', select: 'name email _id userId' },
+                    { path: 'author', select: 'name email _id  userId' },
                     { path: 'project', select: 'name description projectId createdAt' },
-                    { path: 'assignedTo', select: 'name email _id userId' },
+                    { path: 'assignedTo', select: 'name email _id  userId' },
                 ]);
             }
         }

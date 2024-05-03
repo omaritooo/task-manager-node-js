@@ -60,6 +60,8 @@ projectSchema.pre('save', async function (next) {
       projects: {
         project: this._id,
         permission: 'author',
+        projectId: this.projectId,
+        name: this.name,
       },
     },
   });
@@ -69,6 +71,7 @@ projectSchema.pre('save', async function (next) {
       projects: {
         project: this._id,
         permission: 'contributor',
+        projectId: this.projectId,
       },
     },
   });
